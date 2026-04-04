@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-background-tertiary: #f3f4f6;
+  --color-background-info: #eff6ff;
+  --color-background-success: #f0fdf4;
+
+  /* Borders */
+  --color-border-tertiary: #e5e7eb;
+  --color-border-secondary: #d1d5db;
+  --color-border-info: #93c5fd;
+  --color-border-success: #86efac;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-info: #2563eb;
+  --color-text-success: #166534;
+
+  /* Radii */
+  --border-radius-lg: 12px;
+  --border-radius-md: 8px;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', monospace;
+}
+
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; }
+  body { @apply bg-white text-gray-900 antialiased; }
+}
+
+@layer utilities {
+  .prose-chat {
+    @apply text-sm leading-relaxed;
+  }
+  .prose-chat p { @apply mb-3 last:mb-0; }
+  .prose-chat ul { @apply list-disc pl-5 mb-3 space-y-1; }
+  .prose-chat ol { @apply list-decimal pl-5 mb-3 space-y-1; }
+  .prose-chat strong { @apply font-semibold text-gray-900; }
+  .prose-chat h2 { @apply font-semibold text-gray-900 mt-4 mb-2 text-base; }
+  .prose-chat h3 { @apply font-semibold text-gray-900 mt-3 mb-1 text-sm; }
+  .prose-chat code { @apply bg-gray-100 rounded px-1 py-0.5 text-xs font-mono; }
+  .prose-chat hr { @apply my-4 border-gray-200; }
+  .prose-chat blockquote { @apply border-l-2 border-gray-300 pl-3 text-gray-600 italic; }
+}

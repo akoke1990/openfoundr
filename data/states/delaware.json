@@ -1,0 +1,46 @@
+{
+  "name": "Delaware",
+  "abbreviation": "DE",
+  "llc": {
+    "filing_name": "Certificate of Formation",
+    "filing_fee": 90,
+    "filing_link": "https://corp.delaware.gov/howtoform.shtml",
+    "online_filing_available": true,
+    "processing_time_standard": "1-3 business days",
+    "processing_time_expedited": "Same day for $100, 1-hour for $1,000",
+    "publication_requirement": false,
+    "annual_report": {
+      "name": "Annual LLC Tax",
+      "required": true,
+      "fee": 300,
+      "frequency": "Annual",
+      "due": "June 1 each year",
+      "notes": "Flat $300/year regardless of revenue or activity. No separate annual report form needed.",
+      "link": "https://corp.delaware.gov/paytaxes.shtml"
+    },
+    "registered_agent": {
+      "required": true,
+      "notes": "Must have a registered agent with a physical DE address. Most founders use a commercial registered agent service (~$50–$150/year) since they don't have a DE address."
+    },
+    "state_tax": {
+      "annual_minimum_fee": 300,
+      "notes": "Flat $300/year. Simple and predictable."
+    }
+  },
+  "sole_proprietorship": {
+    "dba_required_if_different_name": true,
+    "dba_filing_location": "County Prothonotary's office",
+    "dba_fee_range": "$25 flat"
+  },
+  "ein": {
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+  "secretary_of_state": {
+    "website": "https://corp.delaware.gov/",
+    "phone": "302-739-3073"
+  },
+  "notes": "Delaware is the gold standard for startups planning to raise venture capital — investors expect it. However, if you're a small business operating locally and not raising VC, forming in your home state is usually simpler and cheaper (you'd need to register as a 'foreign LLC' in your home state anyway, paying fees twice). Delaware makes sense if: (1) you plan to raise VC, (2) you want strong legal precedent and privacy, or (3) you have multiple out-of-state members."
+}

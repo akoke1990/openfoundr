@@ -1,0 +1,44 @@
+{
+  "name": "California",
+  "abbreviation": "CA",
+  "llc": {
+    "filing_name": "Articles of Organization",
+    "filing_fee": 70,
+    "filing_link": "https://bizfileonline.sos.ca.gov/",
+    "online_filing_available": true,
+    "processing_time_standard": "3-5 business days online",
+    "publication_requirement": false,
+    "annual_report": {
+      "name": "Statement of Information",
+      "required": true,
+      "fee": 20,
+      "frequency": "Every 2 years",
+      "due": "Within 90 days of formation, then every 2 years",
+      "link": "https://bizfileonline.sos.ca.gov/"
+    },
+    "registered_agent": {
+      "required": true,
+      "notes": "Must have a registered agent (called 'Agent for Service of Process') with a physical CA address."
+    },
+    "state_tax": {
+      "annual_minimum_fee": 800,
+      "notes": "IMPORTANT: California charges a minimum $800 franchise tax per year, due even if your LLC made no money. First year may be waived depending on formation date. This is the biggest cost surprise for CA LLCs."
+    }
+  },
+  "sole_proprietorship": {
+    "dba_required_if_different_name": true,
+    "dba_filing_location": "County Clerk's office",
+    "dba_fee_range": "$25–$55 depending on county"
+  },
+  "ein": {
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+  "secretary_of_state": {
+    "website": "https://www.sos.ca.gov/business-programs/business-entities",
+    "phone": "916-657-5448"
+  },
+  "notes": "California's $800 minimum franchise tax is a real cost that surprises many first-time founders. Budget for it every year. Also note that CA LLCs with income over $250,000 pay additional fees. The CA Franchise Tax Board (FTB) administers this, separate from the SOS."
+}

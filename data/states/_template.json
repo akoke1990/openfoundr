@@ -1,0 +1,97 @@
+{
+  "_instructions": "Copy this file, rename it to your-state-name.json (lowercase, hyphens), fill in the fields, and submit a PR. Set any field to null if you don't know it — accurate and incomplete is better than complete and wrong. Remove all _comment fields before submitting.",
+
+  "name": "State Name",
+  "abbreviation": "XX",
+
+  "llc": {
+    "_comment": "Information for forming an LLC in this state",
+
+    "filing_name": "Articles of Organization",
+    "_comment_filing_name": "Some states call this 'Certificate of Formation' (Texas) or 'Certificate of Organization' (Massachusetts)",
+
+    "filing_fee": null,
+    "_comment_filing_fee": "Filing fee in USD as a number, e.g. 200. Set null if unknown.",
+
+    "filing_link": null,
+    "_comment_filing_link": "Direct URL to the state's online filing system or form download",
+
+    "online_filing_available": null,
+    "_comment_online": "true/false — can you file online?",
+
+    "processing_time_standard": null,
+    "_comment_processing": "e.g. '7-10 business days' or 'Immediate online'",
+
+    "processing_time_expedited": null,
+    "_comment_expedited": "e.g. '24 hours for $50 extra' — set null if no expedited option",
+
+    "publication_requirement": false,
+    "_comment_publication": "IMPORTANT: Only New York and Arizona require newspaper publication. Set true if your state requires it.",
+
+    "publication_notes": null,
+    "_comment_pub_notes": "If publication_requirement is true, describe the requirement, timeline, and estimated cost.",
+
+    "annual_report": {
+      "name": null,
+      "_comment_name": "What your state calls it — e.g. 'Annual Report', 'Biennial Statement', 'Statement of Information'",
+      "required": null,
+      "fee": null,
+      "_comment_fee": "Fee in USD as a number. 0 if there's no fee but a filing is still required.",
+      "frequency": null,
+      "_comment_frequency": "e.g. 'Annual', 'Every 2 years'",
+      "due": null,
+      "_comment_due": "e.g. 'April 15 each year' or 'Within 90 days of formation anniversary'",
+      "notes": null,
+      "_comment_notes": "Any important warnings — e.g. late fees, dissolution risk",
+      "link": null
+    },
+
+    "registered_agent": {
+      "required": null,
+      "_comment_ra": "Almost all states require a registered agent. true/false.",
+      "notes": null,
+      "_comment_ra_notes": "Any state-specific notes — e.g. 'Must have a physical street address (no PO boxes)'"
+    },
+
+    "state_tax": {
+      "annual_minimum_fee": null,
+      "_comment_tax": "Annual minimum state tax/fee in USD. 0 if none. California is $800. Texas is $0 for most small businesses.",
+      "notes": null,
+      "_comment_tax_notes": "Important tax notes — this is where CA's $800 minimum, NY's publication cost, etc. go."
+    }
+  },
+
+  "sole_proprietorship": {
+    "dba_required_if_different_name": null,
+    "_comment_dba": "true/false — is a DBA required if operating under a name other than your legal name?",
+    "dba_filing_location": null,
+    "_comment_dba_loc": "e.g. 'County Clerk's office' or 'Secretary of State'",
+    "dba_fee_range": null,
+    "_comment_dba_fee": "e.g. '$25–$50 depending on county'"
+  },
+
+  "ein": {
+    "_comment": "EIN info is the same for all states — this section documents any state-specific nuances",
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+
+  "secretary_of_state": {
+    "website": null,
+    "_comment_sos": "Main URL for the Secretary of State's business filing division",
+    "phone": null
+  },
+
+  "notes": null,
+  "_comment_notes": "Anything important that founders in this state need to know that doesn't fit the fields above. This is where you put the 'gotchas' — unusual requirements, common mistakes, cost surprises.",
+
+  "_sources": [
+    "List the URLs you used to verify this information, e.g.:",
+    "https://[state].gov/sos/business/llc",
+    "https://[state].gov/revenue/franchise-tax"
+  ],
+  "_contributor": "Your name or GitHub handle (optional)",
+  "_last_verified": "YYYY-MM-DD"
+}

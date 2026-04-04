@@ -1,0 +1,45 @@
+{
+  "name": "Texas",
+  "abbreviation": "TX",
+  "llc": {
+    "filing_name": "Certificate of Formation",
+    "filing_fee": 300,
+    "filing_link": "https://www.sos.state.tx.us/corp/forms_option.shtml",
+    "online_filing_available": true,
+    "processing_time_standard": "3-5 business days online",
+    "publication_requirement": false,
+    "annual_report": {
+      "name": "Franchise Tax Report",
+      "required": true,
+      "fee": 0,
+      "frequency": "Annual",
+      "due": "May 15 each year",
+      "notes": "Most small LLCs (under ~$2.47M gross revenue) pay $0 in franchise tax but must still file the annual report. No fee for the report itself.",
+      "link": "https://comptroller.texas.gov/taxes/franchise/"
+    },
+    "registered_agent": {
+      "required": true,
+      "notes": "Must have a registered agent with a physical TX street address."
+    },
+    "state_tax": {
+      "annual_minimum_fee": 0,
+      "notes": "Texas has no personal income tax and most small LLCs pay $0 franchise tax. One of the most business-friendly states."
+    }
+  },
+  "sole_proprietorship": {
+    "dba_required_if_different_name": true,
+    "dba_filing_location": "County Clerk's office",
+    "dba_fee_range": "$15–$25 depending on county"
+  },
+  "ein": {
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+  "secretary_of_state": {
+    "website": "https://www.sos.state.tx.us/corp/",
+    "phone": "512-463-5555"
+  },
+  "notes": "Texas is one of the most founder-friendly states: no personal income tax, low franchise tax burden for small businesses, reasonable filing fees."
+}

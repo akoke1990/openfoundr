@@ -1,0 +1,46 @@
+{
+  "name": "New York",
+  "abbreviation": "NY",
+  "llc": {
+    "filing_name": "Articles of Organization",
+    "filing_fee": 200,
+    "filing_link": "https://apps.dos.ny.gov/publicInquiry/",
+    "online_filing_available": true,
+    "processing_time_standard": "7-10 business days",
+    "processing_time_expedited": "24 hours for $25 extra",
+    "publication_requirement": true,
+    "publication_notes": "IMPORTANT: New York requires you to publish a notice of formation in two newspapers in your county for 6 consecutive weeks. Estimated cost: $1,000–$2,000 depending on county. Manhattan is the most expensive (~$2,000). This must be done within 120 days of formation or your LLC can be suspended.",
+    "annual_report": {
+      "name": "Biennial Statement",
+      "required": true,
+      "fee": 9,
+      "frequency": "Every 2 years",
+      "due": "During the month your LLC was formed",
+      "link": "https://www.businessexpress.ny.gov/"
+    },
+    "registered_agent": {
+      "required": true,
+      "notes": "Must have a registered agent with a physical NY address. You can be your own registered agent if you have a NY address."
+    },
+    "state_tax": {
+      "annual_minimum_fee": 25,
+      "notes": "NY LLCs pay an annual filing fee based on gross income, minimum $25. Separate from NYC's UBT (Unincorporated Business Tax) if you're in NYC."
+    }
+  },
+  "sole_proprietorship": {
+    "dba_required_if_different_name": true,
+    "dba_filing_location": "County Clerk's office",
+    "dba_fee_range": "$25–$35 depending on county"
+  },
+  "ein": {
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+  "secretary_of_state": {
+    "website": "https://www.dos.ny.gov/corps/",
+    "phone": "518-473-2492"
+  },
+  "notes": "New York's publication requirement is the most expensive and confusing part of forming an LLC here. Budget for it upfront. Delaware LLCs can operate in NY as foreign entities but still need to register (and still have the publication requirement)."
+}

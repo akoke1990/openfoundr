@@ -1,0 +1,45 @@
+{
+  "name": "Florida",
+  "abbreviation": "FL",
+  "llc": {
+    "filing_name": "Articles of Organization",
+    "filing_fee": 125,
+    "filing_link": "https://dos.myflorida.com/sunbiz/manage-business/efile/fl-llc/",
+    "online_filing_available": true,
+    "processing_time_standard": "2-3 business days online",
+    "publication_requirement": false,
+    "annual_report": {
+      "name": "Annual Report",
+      "required": true,
+      "fee": 138.75,
+      "frequency": "Annual",
+      "due": "May 1 each year (late fee after May 1: $400)",
+      "notes": "Do NOT miss May 1. The late fee is $400 and if you miss the third Friday of September, your LLC is dissolved.",
+      "link": "https://dos.myflorida.com/sunbiz/"
+    },
+    "registered_agent": {
+      "required": true,
+      "notes": "Must have a registered agent with a physical FL street address."
+    },
+    "state_tax": {
+      "annual_minimum_fee": 0,
+      "notes": "Florida has no personal income tax. LLCs taxed as partnerships or sole props pay no FL income tax. Single-member LLCs are typically disregarded entities for FL tax purposes."
+    }
+  },
+  "sole_proprietorship": {
+    "dba_required_if_different_name": true,
+    "dba_filing_location": "County Clerk's office",
+    "dba_fee_range": "$50–$75 depending on county"
+  },
+  "ein": {
+    "required_for_llc_with_employees": true,
+    "recommended_for_all": true,
+    "link": "https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",
+    "processing_time": "Immediate online"
+  },
+  "secretary_of_state": {
+    "website": "https://dos.myflorida.com/sunbiz/",
+    "phone": "850-245-6052"
+  },
+  "notes": "Florida's Sunbiz portal is one of the most user-friendly state filing systems. Watch the May 1 annual report deadline carefully — the $400 late fee is a nasty surprise."
+}

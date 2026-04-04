@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── TypeScript build check ──────────────────────────────────────────────────
+  web:
+    name: Web (TypeScript)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          ANTHROPIC_API_KEY: dummy_key_for_build
+
+  # ── Python agent check ──────────────────────────────────────────────────────
+  agent:
+    name: Agent (Python)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install -r requirements.txt
+
+      - name: Import check
+        run: python -c "from agent.tools import TOOL_SCHEMAS, dispatch_tool; print(f'✓ {len(TOOL_SCHEMAS)} tools loaded')"
+
+      - name: Tool smoke test
+        run: |
+          python -c "
+          from agent.tools import get_state_info, recommend_entity_type, generate_launch_checklist
+
+          # State lookup
+          ny = get_state_info('NY')
+          assert ny['name'] == 'New York', f'Expected New York, got {ny[\"name\"]}'
+          assert ny['llc']['filing_fee'] == 200
+
+          # Entity recommendation
+          rec = recommend_entity_type(solo_or_partners='solo', wants_liability_protection=True, state='Texas')
+          assert 'LLC' in rec['recommended']
+
+          # Checklist
+          cl = generate_launch_checklist(state='CA', entity_type='llc', industry='consulting')
+          assert cl['summary']['total_items'] > 0
+
+          print('✓ All tool smoke tests passed')
+          "
+
+  # ── State data validation ───────────────────────────────────────────────────
+  state-data:
+    name: State data (JSON)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate state JSON files
+        run: |
+          python -c "
+          import json, os, sys
+          from pathlib import Path
+
+          required_fields = ['name', 'abbreviation', 'llc', 'ein', 'secretary_of_state']
+          required_llc_fields = ['filing_fee', 'filing_link', 'annual_report', 'registered_agent']
+          errors = []
+
+          states_dir = Path('data/states')
+          files = [f for f in states_dir.glob('*.json') if not f.name.startswith('_')]
+
+          for filepath in files:
+              try:
+                  data = json.loads(filepath.read_text())
+              except json.JSONDecodeError as e:
+                  errors.append(f'{filepath.name}: Invalid JSON — {e}')
+                  continue
+
+              for field in required_fields:
+                  if field not in data:
+                      errors.append(f'{filepath.name}: Missing required field \"{field}\"')
+
+              if 'llc' in data:
+                  for field in required_llc_fields:
+                      if field not in data['llc']:
+                          errors.append(f'{filepath.name}: Missing llc.{field}')
+
+          if errors:
+              print('State data validation errors:')
+              for e in errors:
+                  print(f'  ✗ {e}')
+              sys.exit(1)
+          else:
+              print(f'✓ {len(files)} state file(s) valid: {[f.stem for f in files]}')
+          "
