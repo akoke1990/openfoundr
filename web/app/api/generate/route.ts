@@ -1,28 +1,23 @@
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import { dispatchTool, TOOL_SCHEMAS } from '@/lib/tools'
-import type { FounderProfile } from '../../../app/start/page'
+import type { FounderProfile } from '@/lib/types'
 
 export const runtime = 'edge'
 
-const client = () => new OpenAI({
-  apiKey: process.env.GROQ_API_KEY ?? 'missing',
-  baseURL: 'https://api.groq.com/openai/v1',
-})
-
-const MODEL = 'llama-3.3-70b-versatile'
+const MODEL = 'claude-haiku-4-5-20251001'
 
 function buildPrompt(profile: FounderProfile): string {
   const partnerInfo = profile.structure === 'partners'
     ? `Partners: ${profile.partners.map(p => `${p.name} (${p.ownership}%)`).join(', ')}`
     : 'Structure: Single owner'
 
-  return `You are OpenFounder. A founder has completed our intake questionnaire. Generate their complete business formation package.
+  return `You are OpenFounder. Generate a complete business formation package for this founder.
 
 FOUNDER PROFILE:
 - Name: ${profile.founderName}
 - Business name: ${profile.businessName || 'not yet decided'}
 - State: ${profile.state} (${profile.stateAbbr})
-- Business type: ${profile.businessType}${profile.businessTypeOther ? ` — ${profile.businessTypeOther}` : ''}
+- Business type: ${profile.businessType}
 - ${partnerInfo}
 - Entity type: ${profile.entityType}
 - Has employees: ${profile.hasEmployees}
@@ -32,34 +27,23 @@ FOUNDER PROFILE:
 - Estimated revenue: ${profile.revenueEstimate}
 - Business address: ${profile.businessAddress || 'not provided'}
 
-INSTRUCTIONS:
-Call the following tools IN ORDER to build their complete package. Do not skip any.
+Call tools in this order: get_state_info, recommend_entity_type, generate_operating_agreement (if LLC), generate_launch_checklist, get_ein_guide, get_banking_guide.
 
-1. Call get_state_info for ${profile.state} to get accurate filing data
-2. Call recommend_entity_type based on their profile  
-3. ${profile.entityType === 'llc' || profile.entityType === 's_corp' ? `Call generate_operating_agreement with their details` : 'Skip operating agreement — not applicable for this entity type'}
-4. Call generate_launch_checklist with all their details
-5. Call get_ein_guide
-6. Call get_banking_guide
-
-After all tool calls, write a warm, personal summary that:
-- Addresses them by first name
-- Confirms their entity choice with a brief explanation of why it fits their situation
-- Highlights the 3 most important things they need to do FIRST (in order)
-- Mentions any state-specific gotchas for ${profile.state} they should know about
-- Ends with genuine encouragement — starting a business takes courage
-
-Write in plain English. No jargon. Be specific with dollar amounts and deadlines from the state data.`
+Then write a warm personal summary addressing them by first name with their 3 most important next steps.`
 }
 
 export async function POST(req: Request) {
   const profile: FounderProfile = await req.json()
   const encoder = new TextEncoder()
-  const groqClient = client()
 
-  const tools: OpenAI.Chat.ChatCompletionTool[] = TOOL_SCHEMAS.map(t => ({
-    type: 'function' as const,
-    function: { name: t.name, description: t.description, parameters: t.input_schema },
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY ?? 'missing',
+  })
+
+  const tools: Anthropic.Tool[] = TOOL_SCHEMAS.map(t => ({
+    name: t.name,
+    description: t.description,
+    input_schema: t.input_schema as Anthropic.Tool['input_schema'],
   }))
 
   const stream = new ReadableStream({
@@ -68,44 +52,42 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
 
       try {
-        const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-          { role: 'system', content: 'You are OpenFounder. Generate complete, accurate business formation packages. Always call all requested tools before writing your summary.' },
+        const messages: Anthropic.MessageParam[] = [
           { role: 'user', content: buildPrompt(profile) },
         ]
 
-        const toolResults: Record<string, unknown> = {}
-
-        // Agentic loop
         while (true) {
-          const response = await groqClient.chat.completions.create({
+          const response = await client.messages.create({
             model: MODEL,
             max_tokens: 8192,
+            system: 'You are OpenFounder. Generate complete business formation packages using the provided tools.',
             tools,
-            tool_choice: 'auto',
             messages,
           })
 
-          const choice = response.choices[0]
-          const msg = choice.message
-
-          if (choice.finish_reason === 'tool_calls' && msg.tool_calls?.length) {
-            messages.push(msg)
-            for (const tc of msg.tool_calls) {
-              send({ type: 'tool_status', tool: tc.function.name })
-              const args = JSON.parse(tc.function.arguments || '{}')
-              const result = dispatchTool(tc.function.name, args)
-              const parsed = JSON.parse(result)
-              toolResults[tc.function.name] = parsed
-              send({ type: 'tool_result', tool: tc.function.name, data: parsed })
-              messages.push({ role: 'tool', tool_call_id: tc.id, content: result })
+          if (response.stop_reason === 'tool_use') {
+            messages.push({ role: 'assistant', content: response.content })
+            const toolResults: Anthropic.ToolResultBlockParam[] = []
+            for (const block of response.content) {
+              if (block.type === 'tool_use') {
+                send({ type: 'tool_status', tool: block.name })
+                const result = dispatchTool(block.name, block.input as Record<string, unknown>)
+                const parsed = JSON.parse(result)
+                send({ type: 'tool_result', tool: block.name, data: parsed })
+                toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result })
+              }
             }
+            messages.push({ role: 'user', content: toolResults })
             continue
           }
 
-          // Final summary text
-          const summary = msg.content || ''
+          const summary = response.content
+            .filter(b => b.type === 'text')
+            .map(b => (b as Anthropic.TextBlock).text)
+            .join('')
+
           send({ type: 'summary', content: summary })
-          send({ type: 'done', toolResults })
+          send({ type: 'done' })
           break
         }
       } catch (err) {
