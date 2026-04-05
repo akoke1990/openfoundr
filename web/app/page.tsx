@@ -67,7 +67,7 @@ export default function Home() {
             <span className="font-semibold text-gray-900">OpenFounder</span>
           </div>
           <a
-            href="https://github.com/openfoundr/openfoundr"
+            href="https://github.com/akoke1990/openfoundr"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
@@ -173,7 +173,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="https://github.com/openfoundr/openfoundr"
+              href="https://github.com/akoke1990/openfoundr"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white text-gray-900 px-6 py-3 rounded-lg font-medium text-sm hover:bg-gray-100 transition-colors"
@@ -181,7 +181,7 @@ export default function Home() {
               Contribute on GitHub
             </a>
             <a
-              href="https://github.com/openfoundr/openfoundr/blob/main/CONTRIBUTING.md"
+              href="https://github.com/akoke1990/openfoundr/blob/main/CONTRIBUTING.md"
               target="_blank"
               rel="noopener noreferrer"
               className="border border-gray-700 text-gray-300 px-6 py-3 rounded-lg font-medium text-sm hover:border-gray-500 transition-colors"
