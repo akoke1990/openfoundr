@@ -6,6 +6,7 @@ export const runtime = 'edge'
 
 const client = new OpenAI({
   apiKey: process.env.ANTHROPIC_API_KEY ?? "missing",
+  defaultHeaders: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? "missing", 'anthropic-version': '2023-06-01' },
   baseURL: 'https://api.anthropic.com/v1',
 })
 
