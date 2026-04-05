@@ -1,15 +1,7 @@
 import OpenAI from 'openai'
 import { TOOL_SCHEMAS, dispatchTool } from '@/lib/tools'
 
-// OpenFounder uses Groq by default (free tier, open source models).
-// To use Anthropic Claude instead, set ANTHROPIC_API_KEY and change
-// the client below — the tool schemas and dispatch logic are identical.
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY ?? process.env.OPENAI_API_KEY ?? 'sk-placeholder',
-  baseURL: 'https://api.groq.com/openai/v1',
-})
-
-const MODEL = 'llama-3.3-70b-versatile'
+export const runtime = 'edge'
 
 const SYSTEM_PROMPT = `You are OpenFounder — a knowledgeable, warm, and practical guide that helps real people start real businesses.
 
@@ -35,12 +27,40 @@ When someone first arrives, warmly introduce yourself and ask:
 
 Then chart a personalized path through the phases.`
 
+// Model tiers — auto-selected based on what the agent is doing
+const FAST_MODEL  = process.env.ANTHROPIC_API_KEY ? 'claude-haiku-4-5-20251001' : 'llama-3.1-8b-instant'
+const SMART_MODEL = process.env.ANTHROPIC_API_KEY ? 'claude-haiku-4-5-20251001' : 'llama-3.3-70b-versatile'
+
+const SMART_TOOLS = new Set([
+  'generate_operating_agreement',
+  'generate_launch_checklist',
+  'recommend_entity_type',
+])
+
+function pickModel(messages: { role: string; content: string }[]): string {
+  const last = (messages[messages.length - 1]?.content ?? '').toLowerCase()
+  const heavy = [
+    'operating agreement', 'draft', 'checklist', 'recommend',
+    'entity', 'llc', 's-corp', 'sole prop', 'corporation',
+    'file', 'formation', 'ein', 'register',
+  ]
+  return heavy.some(t => last.includes(t)) ? SMART_MODEL : FAST_MODEL
+}
+
 export async function POST(req: Request) {
+  // Build-safe: provide fallback so SDK never throws at module evaluation
+  const groqKey = (process.env.GROQ_API_KEY ?? 'sk-placeholder')
+
   const { messages } = await req.json()
 
+  const client = new OpenAI({
+    apiKey: groqKey,
+    baseURL: 'https://api.groq.com/openai/v1',
+  })
+
+  const model = pickModel(messages)
   const encoder = new TextEncoder()
 
-  // Convert Anthropic-style tool schemas to OpenAI format
   const tools: OpenAI.Chat.ChatCompletionTool[] = TOOL_SCHEMAS.map(t => ({
     type: 'function' as const,
     function: {
@@ -53,15 +73,21 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Build messages with system prompt in OpenAI format
         const currentMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages,
         ]
 
+        // Stream model info to client
+        controller.enqueue(encoder.encode(
+          `data: ${JSON.stringify({ type: 'model', model })}\n\n`
+        ))
+
+        let activeModel = model
+
         while (true) {
           const response = await client.chat.completions.create({
-            model: MODEL,
+            model: activeModel,
             max_tokens: 4096,
             tools,
             tool_choice: 'auto',
@@ -71,11 +97,17 @@ export async function POST(req: Request) {
           const choice = response.choices[0]
           const msg = choice.message
 
-          // Handle tool calls
           if (choice.finish_reason === 'tool_calls' && msg.tool_calls?.length) {
             currentMessages.push(msg)
 
+            // Escalate to smart model if a heavy tool is called
             for (const tc of msg.tool_calls) {
+              if (SMART_TOOLS.has(tc.function.name) && activeModel === FAST_MODEL) {
+                activeModel = SMART_MODEL
+                controller.enqueue(encoder.encode(
+                  `data: ${JSON.stringify({ type: 'model', model: activeModel })}\n\n`
+                ))
+              }
               controller.enqueue(encoder.encode(
                 `data: ${JSON.stringify({ type: 'tool_status', tool: tc.function.name })}\n\n`
               ))
@@ -90,14 +122,13 @@ export async function POST(req: Request) {
             continue
           }
 
-          // Final text response — stream it
           const fullText = msg.content || ''
           const chunkSize = 50
           for (let i = 0; i < fullText.length; i += chunkSize) {
             controller.enqueue(encoder.encode(
               `data: ${JSON.stringify({ type: 'text', content: fullText.slice(i, i + chunkSize) })}\n\n`
             ))
-            await new Promise(r => setTimeout(r, 10))
+            await new Promise(r => setTimeout(r, 8))
           }
 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`))

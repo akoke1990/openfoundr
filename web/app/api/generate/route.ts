@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { dispatchTool, TOOL_SCHEMAS } from '@/lib/tools'
-import type { FounderProfile } from '@/lib/types'
+import type { FounderProfile } from '../../../app/start/page'
 
 export const runtime = 'edge'
 
@@ -74,31 +74,9 @@ export async function POST(req: Request) {
         ]
 
         const toolResults: Record<string, unknown> = {}
-        let toolsWereUsed = false
 
-        // Agentic loop — tool detection pass is non-streaming (fast), final summary is streamed
+        // Agentic loop
         while (true) {
-          if (toolsWereUsed) {
-            // Stream final summary to avoid edge timeout with large context
-            const summaryStream = await groqClient.chat.completions.create({
-              model: MODEL,
-              max_tokens: 2048,
-              tool_choice: 'none' as const,
-              messages,
-              stream: true,
-            })
-            let summary = ''
-            for await (const chunk of summaryStream) {
-              const delta = chunk.choices[0]?.delta?.content
-              if (delta) {
-                summary += delta
-                send({ type: 'summary_chunk', content: delta })
-              }
-            }
-            send({ type: 'done', toolResults, summary })
-            break
-          }
-
           const response = await groqClient.chat.completions.create({
             model: MODEL,
             max_tokens: 8192,
@@ -121,11 +99,10 @@ export async function POST(req: Request) {
               send({ type: 'tool_result', tool: tc.function.name, data: parsed })
               messages.push({ role: 'tool', tool_call_id: tc.id, content: result })
             }
-            toolsWereUsed = true
             continue
           }
 
-          // No tools called (shouldn't happen for generate, but handle gracefully)
+          // Final summary text
           const summary = msg.content || ''
           send({ type: 'summary', content: summary })
           send({ type: 'done', toolResults })
