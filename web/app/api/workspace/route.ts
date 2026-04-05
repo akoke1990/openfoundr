@@ -1,14 +1,8 @@
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import { dispatchTool, TOOL_SCHEMAS } from '@/lib/tools'
 import type { FounderProfile } from '@/lib/types'
 
 export const runtime = 'edge'
-
-const client = new OpenAI({
-  apiKey: process.env.ANTHROPIC_API_KEY ?? "missing",
-  defaultHeaders: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? "missing", 'anthropic-version': '2023-06-01' },
-  baseURL: 'https://api.anthropic.com/v1',
-})
 
 const MODEL = 'claude-haiku-4-5-20251001'
 
@@ -230,15 +224,20 @@ RULES:
 
 export async function POST(req: Request) {
   const { messages, profile } = await req.json() as {
-    messages: OpenAI.Chat.ChatCompletionMessageParam[]
+    messages: { role: 'user' | 'assistant'; content: string }[]
     profile: Partial<FounderProfile> | null
   }
 
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY ?? 'missing',
+  })
+
   const encoder = new TextEncoder()
 
-  const tools: OpenAI.Chat.ChatCompletionTool[] = ALL_TOOL_SCHEMAS.map(t => ({
-    type: 'function' as const,
-    function: { name: t.name, description: t.description, parameters: t.input_schema },
+  const tools: Anthropic.Tool[] = ALL_TOOL_SCHEMAS.map(t => ({
+    name: t.name,
+    description: t.description,
+    input_schema: t.input_schema as Anthropic.Tool['input_schema'],
   }))
 
   const stream = new ReadableStream({
@@ -247,75 +246,62 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
 
       try {
-        const currentMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-          { role: 'system', content: buildSystemPrompt(profile) },
-          ...messages,
-        ]
-
-        let toolsWereUsed = false
+        const currentMessages: Anthropic.MessageParam[] = messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({ role: m.role, content: m.content }))
 
         while (true) {
-          // After tool calls, stream the final response to avoid edge timeout
-          if (toolsWereUsed) {
-            const finalStream = await client.chat.completions.create({
-              model: MODEL,
-              max_tokens: 512,
-              tools,
-              tool_choice: 'none' as const,
-              messages: currentMessages,
-              stream: true,
-            })
-            for await (const chunk of finalStream) {
-              const delta = chunk.choices[0]?.delta?.content
-              if (delta) send({ type: 'text', content: delta })
-            }
-            send({ type: 'done' })
-            break
-          }
-
-          const response = await client.chat.completions.create({
+          const response = await client.messages.create({
             model: MODEL,
             max_tokens: 2048,
+            system: buildSystemPrompt(profile),
             tools,
-            tool_choice: 'auto',
             messages: currentMessages,
           })
 
-          const choice = response.choices[0]
-          const msg = choice.message
+          if (response.stop_reason === 'tool_use') {
+            currentMessages.push({ role: 'assistant', content: response.content })
+            const toolResults: Anthropic.ToolResultBlockParam[] = []
 
-          if (choice.finish_reason === 'tool_calls' && msg.tool_calls?.length) {
-            currentMessages.push(msg)
+            for (const block of response.content) {
+              if (block.type === 'tool_use') {
+                const toolName = block.name
+                const args = block.input as Record<string, unknown>
 
-            for (const tc of msg.tool_calls) {
-              const toolName = tc.function.name
-              const args = JSON.parse(tc.function.arguments || '{}')
+                send({ type: 'thinking', label: TOOL_LABELS[toolName] || 'Working...' })
 
-              send({ type: 'thinking', label: TOOL_LABELS[toolName] || 'Working...' })
+                const profileUpdates = extractProfileUpdates(toolName, args)
+                if (profileUpdates) send({ type: 'profile_update', updates: profileUpdates })
 
-              // Emit profile update if we can extract info from args
-              const profileUpdates = extractProfileUpdates(toolName, args)
-              if (profileUpdates) send({ type: 'profile_update', updates: profileUpdates })
+                let result: unknown
+                if (toolName === 'check_business_name') {
+                  result = await checkBusinessName(args.name as string, args.stateAbbr as string)
+                } else if (toolName === 'search_web') {
+                  result = await searchWeb(args.query as string)
+                } else {
+                  try { result = JSON.parse(dispatchTool(toolName, args)) }
+                  catch { result = { error: 'Tool failed' } }
+                }
 
-              let result: unknown
-              if (toolName === 'check_business_name') {
-                result = await checkBusinessName(args.name, args.stateAbbr)
-              } else if (toolName === 'search_web') {
-                result = await searchWeb(args.query)
-              } else {
-                try { result = JSON.parse(dispatchTool(toolName, args)) }
-                catch { result = { error: 'Tool failed' } }
+                send({ type: 'card', card: { type: TOOL_CARD_TYPE[toolName] || 'generic', data: result } })
+                toolResults.push({
+                  type: 'tool_result',
+                  tool_use_id: block.id,
+                  content: JSON.stringify(result),
+                })
               }
-
-              send({ type: 'card', card: { type: TOOL_CARD_TYPE[toolName] || 'generic', data: result } })
-              currentMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) })
             }
-            toolsWereUsed = true
+
+            currentMessages.push({ role: 'user', content: toolResults })
             continue
           }
 
-          // No tools called — response is already complete, chunk it out
-          const text = msg.content || ''
+          // end_turn — fake-chunk the text response
+          const text = response.content
+            .filter(b => b.type === 'text')
+            .map(b => (b as Anthropic.TextBlock).text)
+            .join('')
+
           const chunkSize = 20
           for (let i = 0; i < text.length; i += chunkSize) {
             send({ type: 'text', content: text.slice(i, i + chunkSize) })

@@ -1,13 +1,7 @@
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import type { FounderProfile } from '@/lib/types'
 
 export const runtime = 'edge'
-
-const client = new OpenAI({
-  apiKey: process.env.ANTHROPIC_API_KEY ?? "missing",
-  defaultHeaders: { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? "missing", 'anthropic-version': '2023-06-01' },
-  baseURL: 'https://api.anthropic.com/v1',
-})
 
 const MODEL = 'claude-haiku-4-5-20251001'
 
@@ -50,31 +44,36 @@ function buildSystemPrompt(profile: FounderProfile): string {
 
 export async function POST(req: Request) {
   const { messages, profile } = await req.json() as {
-    messages: OpenAI.Chat.ChatCompletionMessageParam[]
+    messages: { role: string; content: string }[]
     profile: FounderProfile
   }
 
   const encoder = new TextEncoder()
   const systemPrompt = buildSystemPrompt(profile)
 
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY ?? 'missing',
+  })
+
+  const anthropicMessages: Anthropic.MessageParam[] = messages
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const response = await client.chat.completions.create({
+        const response = await client.messages.create({
           model: MODEL,
           max_tokens: 1024,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...messages,
-          ],
+          system: systemPrompt,
+          messages: anthropicMessages,
           stream: true,
         })
 
-        for await (const chunk of response) {
-          const delta = chunk.choices[0]?.delta?.content
-          if (delta) {
+        for await (const event of response) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(encoder.encode(
-              `data: ${JSON.stringify({ type: 'text', content: delta })}\n\n`
+              `data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`
             ))
           }
         }
