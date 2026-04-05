@@ -3,8 +3,8 @@ import OpenAI from 'openai'
 export const runtime = 'edge'
 
 const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: 'https://api.anthropic.com/v1',
 })
 
 export async function POST(req: Request) {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const { task, profile } = await req.json()
 
     const response = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: 'claude-haiku-4-5-20251001',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       response_format: { type: 'json_object' } as any,
       max_tokens: 900,

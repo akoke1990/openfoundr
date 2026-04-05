@@ -5,11 +5,11 @@ import type { FounderProfile } from '@/lib/types'
 export const runtime = 'edge'
 
 const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY ?? 'sk-placeholder',
-  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.ANTHROPIC_API_KEY ?? "missing",
+  baseURL: 'https://api.anthropic.com/v1',
 })
 
-const MODEL = 'llama-3.3-70b-versatile'
+const MODEL = 'claude-haiku-4-5-20251001'
 
 // ─── Extra workspace-only tools ───────────────────────────────────────────────
 
