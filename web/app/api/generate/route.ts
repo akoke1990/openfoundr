@@ -9,7 +9,7 @@ const client = () => new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 })
 
-const MODEL = 'llama-3.3-70b-versatile'
+const MODEL = 'claude-haiku-4-5-20251001'
 
 function buildPrompt(profile: FounderProfile): string {
   const partnerInfo = profile.structure === 'partners'
