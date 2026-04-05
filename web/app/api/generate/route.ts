@@ -5,8 +5,8 @@ import type { FounderProfile } from '../../../app/start/page'
 export const runtime = 'edge'
 
 const client = () => new OpenAI({
-  apiKey: process.env.GROQ_API_KEY ?? 'missing',
-  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.ANTHROPIC_API_KEY ?? "missing",
+  baseURL: 'https://api.anthropic.com/v1',
 })
 
 const MODEL = 'claude-haiku-4-5'
