@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { dispatchTool, TOOL_SCHEMAS } from '@/lib/tools'
 import type { FounderProfile } from '@/lib/types'
 
-export const runtime = 'edge'
+
 
 const MODEL = 'claude-haiku-4-5-20251001'
 

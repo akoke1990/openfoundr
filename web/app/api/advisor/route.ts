@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { FounderProfile } from '@/lib/types'
 
-export const runtime = 'edge'
+
 
 const MODEL = 'claude-haiku-4-5-20251001'
 

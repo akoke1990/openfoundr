@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { TOOL_SCHEMAS, dispatchTool } from '@/lib/tools'
 
-export const runtime = 'edge'
+
 
 const MODEL = 'claude-haiku-4-5-20251001'
 
